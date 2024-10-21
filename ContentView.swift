@@ -8,13 +8,20 @@ extension Color {
     static let accentColor = Color(red: 0.95, green: 0.3, blue: 0.3) // Coral
     static let backgroundColor = Color(red: 0.95, green: 0.95, blue: 0.95) // Light Gray
     static let cardBackgroundColor = Color.white
+    
+    // Tag Colors
+    static let volunteerTag = Color(red: 0.25, green: 0.47, blue: 0.85) // Blue
+    static let governmentTag = Color(red: 0.95, green: 0.77, blue: 0.06) // Yellow
+    static let competitionTag = Color(red: 0.95, green: 0.3, blue: 0.3) // Coral
+    static let researchTag = Color(red: 0.4, green: 0.6, blue: 0.4) // Green
+    static let internshipTag = Color(red: 0.8, green: 0.4, blue: 0.8) // Purple
 }
 
 // MARK: - Data Models
 struct Opportunity: Identifiable, Codable {
     let id: UUID
     let title: String
-    let category: Category
+    let categories: [Category] // Updated to multiple categories
     let description: String
     let imageName: String
     var isStarred: Bool = false
@@ -22,11 +29,14 @@ struct Opportunity: Identifiable, Codable {
     var isCompleted: Bool = false
 }
 
-enum Category: String, CaseIterable, Codable {
+enum Category: String, CaseIterable, Codable, Identifiable {
     case volunteer = "Volunteer"
     case government = "Government"
     case competition = "Competition"
     case research = "Research"
+    case internship = "Internship" // Added Internship
+    
+    var id: String { self.rawValue }
 }
 
 struct Badge: Identifiable {
@@ -45,12 +55,16 @@ class User: ObservableObject {
     @Published var isLoggedIn: Bool = false
     @Published var username: String = ""
     @Published var starredOpportunities: [UUID] = []
-    @Published var skills: [String] = [] // Added for skill-based matching
-    @Published var goals: [String] = [] // Added for personalized journeys
-    @Published var badges: [Badge] = [] // Added for gamification
-    @Published var totalImpact: Impact = Impact() // For impact metrics
-    @Published var starredActivities: [StarredActivity] = [] // Starred Activities
+    @Published var skills: [String] = []
+    @Published var goals: [String] = []
+    @Published var badges: [Badge] = []
+    @Published var totalImpact: Impact = Impact()
+    @Published var starredActivities: [StarredActivity] = []
+    
+    // New Property for Interests
+    @Published var interests: [Category] = []
 }
+
 
 struct Impact {
     var hoursVolunteered: Double = 0.0
@@ -64,21 +78,21 @@ let sampleOpportunities: [Opportunity] = [
     Opportunity(
         id: UUID(),
         title: "Lake County Forest Preserve Volunteer",
-        category: .volunteer,
+        categories: [.volunteer],
         description: "Assist with restoration projects, trail maintenance, and conservation efforts in the Lake County Forest Preserves. Perfect for students passionate about environmental protection.",
         imageName: "leaf.fill"
     ),
     Opportunity(
         id: UUID(),
         title: "Youth Leadership Program - Lake County Government",
-        category: .government,
+        categories: [.government, .internship],
         description: "A leadership program focused on local government. Engage with Lake County officials and work on projects that impact local communities.",
         imageName: "building.2.crop.circle"
     ),
     Opportunity(
         id: UUID(),
         title: "Lake County Food Pantry Assistant",
-        category: .volunteer,
+        categories: [.volunteer],
         description: "Help organize, pack, and distribute food to families in need at local Lake County food pantries.",
         imageName: "cart.fill"
     ),
@@ -87,14 +101,14 @@ let sampleOpportunities: [Opportunity] = [
     Opportunity(
         id: UUID(),
         title: "Illinois General Assembly Page for a Day",
-        category: .government,
+        categories: [.government, .internship],
         description: "Experience a day in the Illinois General Assembly. Assist lawmakers and staff, and observe legislative proceedings in Springfield.",
         imageName: "megaphone.fill"
     ),
     Opportunity(
         id: UUID(),
         title: "Illinois State Science Fair",
-        category: .competition,
+        categories: [.competition, .research],
         description: "Participate in this statewide science fair and present your research on a variety of STEM topics.",
         imageName: "flask.fill"
     ),
@@ -103,14 +117,14 @@ let sampleOpportunities: [Opportunity] = [
     Opportunity(
         id: UUID(),
         title: "National Parks Service - Youth Conservation Corps",
-        category: .volunteer,
+        categories: [.volunteer],
         description: "A summer work program for students who want to help conserve America's national parks. Participants assist with trail maintenance and habitat preservation.",
         imageName: "leaf.arrow.triangle.circlepath"
     ),
     Opportunity(
         id: UUID(),
         title: "Congressional Award Program",
-        category: .government,
+        categories: [.government],
         description: "Earn a Congressional Award by setting and achieving personal goals in volunteer service, personal development, physical fitness, and expedition/exploration.",
         imageName: "star"
     ),
@@ -119,21 +133,21 @@ let sampleOpportunities: [Opportunity] = [
     Opportunity(
         id: UUID(),
         title: "Regeneron Science Talent Search",
-        category: .competition,
+        categories: [.competition, .research],
         description: "A prestigious national competition for high school seniors to showcase their scientific research and compete for scholarships.",
         imageName: "atom"
     ),
     Opportunity(
         id: UUID(),
         title: "MIT THINK Scholars Program",
-        category: .competition,
+        categories: [.competition, .research],
         description: "An annual competition for students with original research projects in science, technology, or engineering. Winners receive funding and mentorship.",
         imageName: "lightbulb.fill"
     ),
     Opportunity(
         id: UUID(),
         title: "National Speech & Debate Tournament",
-        category: .competition,
+        categories: [.competition],
         description: "The largest academic competition in the country, where students compete in speech and debate to demonstrate public speaking and argumentation skills.",
         imageName: "mic.fill"
     ),
@@ -142,21 +156,21 @@ let sampleOpportunities: [Opportunity] = [
     Opportunity(
         id: UUID(),
         title: "NIH High School Summer Internship Program",
-        category: .research,
+        categories: [.research, .internship],
         description: "Conduct research at the National Institutes of Health and gain hands-on experience in biomedical research alongside leading scientists.",
         imageName: "stethoscope"
     ),
     Opportunity(
         id: UUID(),
         title: "USDA AgDiscovery Program",
-        category: .research,
+        categories: [.research, .internship],
         description: "A summer program where students learn about careers in agriculture and animal science through hands-on activities and field trips.",
         imageName: "tortoise.fill"
     ),
     Opportunity(
         id: UUID(),
         title: "Girls Who Code Summer Immersion Program",
-        category: .research,
+        categories: [.research, .internship],
         description: "A summer program that teaches high school girls coding skills and introduces them to careers in technology.",
         imageName: "desktopcomputer"
     ),
@@ -165,21 +179,21 @@ let sampleOpportunities: [Opportunity] = [
     Opportunity(
         id: UUID(),
         title: "Lake County Public Library Assistant",
-        category: .volunteer,
+        categories: [.volunteer],
         description: "Assist with organizing materials, helping with community programs, and supporting literacy events at Lake County libraries.",
         imageName: "book.fill"
     ),
     Opportunity(
         id: UUID(),
         title: "Johns Hopkins Center for Talented Youth Summer Programs",
-        category: .research,
+        categories: [.research, .internship],
         description: "Participate in courses covering topics like engineering, biomedical science, and computer science. Open to students with exceptional academic records.",
         imageName: "microscope"
     ),
     Opportunity(
         id: UUID(),
         title: "Prudential Spirit of Community Awards",
-        category: .volunteer,
+        categories: [.volunteer],
         description: "A national program honoring students in grades 5-12 who have made meaningful contributions to their communities through volunteer service.",
         imageName: "hands.sparkles"
     )
@@ -200,6 +214,9 @@ class OpportunityViewModel: ObservableObject {
     @Published var opportunities: [Opportunity] = sampleOpportunities
     @Published var user: User = User()
     @Published var isDarkMode: Bool = false
+    
+    // New: Selected Categories for Filtering
+    @Published var selectedCategories: Set<Category> = []
     
     // Star/Unstar Opportunity
     func toggleStar(for opportunity: Opportunity) {
@@ -240,11 +257,11 @@ class OpportunityViewModel: ObservableObject {
     }
     
     // Create Event
-    func createEvent(title: String, category: Category, description: String, imageName: String) {
+    func createEvent(title: String, category: [Category], description: String, imageName: String) {
         let newOpportunity = Opportunity(
             id: UUID(),
             title: title,
-            category: category,
+            categories: category,
             description: description,
             imageName: imageName
         )
@@ -280,6 +297,7 @@ struct ContentView: View {
             if showOnboarding {
                 OnboardingView(showOnboarding: $showOnboarding)
                     .environmentObject(viewModel)
+                    .transition(.opacity)
             } else {
                 TabView {
                     HomeView()
@@ -326,68 +344,55 @@ struct ContentView: View {
                 }
                 .accentColor(.primaryColor)
                 .preferredColorScheme(viewModel.isDarkMode ? .dark : .light)
+                .transition(.slide)
             }
         }
+        .animation(.easeInOut, value: showOnboarding)
     }
 }
 
-// MARK: - OnboardingView
+
+// MARK: - Enhanced OnboardingView
+
 struct OnboardingView: View {
     @Binding var showOnboarding: Bool
     @EnvironmentObject var viewModel: OpportunityViewModel
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                Spacer()
+        ZStack {
+            MovingGradientBackground()
+            
+            TabView {
+                OnboardingPage1()
+                    .tag(0)
                 
-                Image(systemName: "hand.raised.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 150, height: 150)
-                    .foregroundColor(.primaryColor)
+                OnboardingPage2()
+                    .tag(1)
                 
-                Text("Welcome to ImpactLink!")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primaryColor)
-                
-                Text("Connect with local and national volunteering opportunities, track your impact, earn badges, and join a community dedicated to making a difference.")
-                    .multilineTextAlignment(.center)
-                    .padding()
-                    .foregroundColor(.primaryColor)
-                
-                Spacer()
-                
-                Button(action: {
-                    withAnimation {
-                        showOnboarding = false
-                    }
-                }) {
-                    Text("Get Started")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.primaryColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(15)
-                        .padding(.horizontal)
-                }
-                .accessibilityLabel(Text("Get Started Button"))
+                OnboardingPage3(showOnboarding: $showOnboarding)
+                    .tag(2)
             }
-            .padding()
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
+            .animation(.easeInOut, value: showOnboarding)
         }
     }
 }
 
+
 // MARK: - HomeView
 struct HomeView: View {
     @EnvironmentObject var viewModel: OpportunityViewModel
-    @State private var selectedCategory: Category = .volunteer
     @Namespace private var animation
     
+    // Computed property to filter opportunities based on selected categories
     var filteredOpportunities: [Opportunity] {
-        viewModel.opportunities.filter { $0.category == selectedCategory }
+        if viewModel.selectedCategories.isEmpty {
+            return viewModel.opportunities
+        } else {
+            return viewModel.opportunities.filter { opportunity in
+                !viewModel.selectedCategories.isDisjoint(with: opportunity.categories)
+            }
+        }
     }
     
     var body: some View {
@@ -405,27 +410,33 @@ struct HomeView: View {
                         .foregroundColor(.primaryColor)
                         .transition(.slide)
                     
-                    // Category Selector
+                    // Category Filter
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 15) {
-                            ForEach(Category.allCases, id: \.self) { category in
+                        HStack(spacing: 10) {
+                            ForEach(Category.allCases) { category in
                                 Button(action: {
-                                    withAnimation(.spring()) {
-                                        selectedCategory = category
+                                    if viewModel.selectedCategories.contains(category) {
+                                        viewModel.selectedCategories.remove(category)
+                                    } else {
+                                        viewModel.selectedCategories.insert(category)
                                     }
                                 }) {
-                                    Text(category.rawValue)
-                                        .fontWeight(selectedCategory == category ? .bold : .regular)
-                                        .padding(.vertical, 8)
-                                        .padding(.horizontal, 16)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 20)
-                                                .fill(selectedCategory == category ? Color.primaryColor : Color.cardBackgroundColor)
-                                                .shadow(color: selectedCategory == category ? Color.primaryColor.opacity(0.4) : Color.clear, radius: 5, x: 0, y: 5)
-                                        )
-                                        .foregroundColor(selectedCategory == category ? .white : .primaryColor)
+                                    HStack {
+                                        Image(systemName: "checkmark.square")
+                                            .opacity(viewModel.selectedCategories.contains(category) ? 1 : 0)
+                                        Text(category.rawValue)
+                                            .font(.subheadline)
+                                            .foregroundColor(viewModel.selectedCategories.contains(category) ? .white : .primaryColor)
+                                    }
+                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .fill(viewModel.selectedCategories.contains(category) ? colorForCategory(category) : Color.cardBackgroundColor)
+                                            .shadow(color: viewModel.selectedCategories.contains(category) ? colorForCategory(category).opacity(0.4) : Color.clear, radius: 5, x: 0, y: 5)
+                                    )
                                 }
-                                .accessibilityLabel(Text(category.rawValue))
+                                .accessibilityLabel(Text("\(category.rawValue) Category Toggle"))
                             }
                         }
                         .padding(.horizontal)
@@ -449,6 +460,22 @@ struct HomeView: View {
                 }
             }
             .navigationBarHidden(true)
+        }
+    }
+    
+    // Helper function to get color for a category
+    func colorForCategory(_ category: Category) -> Color {
+        switch category {
+        case .volunteer:
+            return .volunteerTag
+        case .government:
+            return .governmentTag
+        case .competition:
+            return .competitionTag
+        case .research:
+            return .researchTag
+        case .internship:
+            return .internshipTag
         }
     }
 }
@@ -783,7 +810,7 @@ struct LeaderboardsView: View {
 struct CreateEventView: View {
     @EnvironmentObject var viewModel: OpportunityViewModel
     @State private var title: String = ""
-    @State private var selectedCategory: Category = .volunteer
+    @State private var selectedCategories: Set<Category> = []
     @State private var description: String = ""
     @State private var imageName: String = "plus.circle.fill"
     @State private var showAlert: Bool = false
@@ -799,12 +826,40 @@ struct CreateEventView: View {
                     Section(header: Text("Event Details")) {
                         TextField("Title", text: $title)
                             .accessibilityLabel(Text("Event Title"))
-                        Picker("Category", selection: $selectedCategory) {
-                            ForEach(Category.allCases, id: \.self) { category in
-                                Text(category.rawValue).tag(category)
+                        
+                        Text("Select Categories")
+                            .font(.headline)
+                            .foregroundColor(.primaryColor)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 10) {
+                                ForEach(Category.allCases) { category in
+                                    Button(action: {
+                                        if selectedCategories.contains(category) {
+                                            selectedCategories.remove(category)
+                                        } else {
+                                            selectedCategories.insert(category)
+                                        }
+                                    }) {
+                                        HStack {
+                                            Image(systemName: selectedCategories.contains(category) ? "checkmark.circle.fill" : "circle")
+                                                .foregroundColor(selectedCategories.contains(category) ? colorForCategory(category) : .gray)
+                                            Text(category.rawValue)
+                                                .foregroundColor(selectedCategories.contains(category) ? .white : .primaryColor)
+                                        }
+                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, 12)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 20)
+                                                .fill(selectedCategories.contains(category) ? colorForCategory(category) : Color.cardBackgroundColor)
+                                                .shadow(color: selectedCategories.contains(category) ? colorForCategory(category).opacity(0.4) : Color.clear, radius: 5, x: 0, y: 5)
+                                        )
+                                    }
+                                    .accessibilityLabel(Text("\(category.rawValue) Category Toggle"))
+                                }
                             }
                         }
-                        .accessibilityLabel(Text("Event Category"))
+                        
                         TextField("Description", text: $description)
                             .accessibilityLabel(Text("Event Description"))
                         TextField("Image Name (SF Symbol)", text: $imageName)
@@ -812,17 +867,18 @@ struct CreateEventView: View {
                     }
                     
                     Button(action: {
-                        if title.isEmpty || description.isEmpty || imageName.isEmpty {
-                            alertMessage = "All fields are required."
+                        if title.isEmpty || description.isEmpty || imageName.isEmpty || selectedCategories.isEmpty {
+                            alertMessage = "All fields and at least one category are required."
                             showAlert = true
                         } else {
-                            viewModel.createEvent(title: title, category: selectedCategory, description: description, imageName: imageName)
+                            viewModel.createEvent(title: title, category: Array(selectedCategories), description: description, imageName: imageName)
                             alertMessage = "Event created successfully!"
                             showAlert = true
                             // Clear fields
                             title = ""
                             description = ""
                             imageName = "plus.circle.fill"
+                            selectedCategories.removeAll()
                         }
                     }) {
                         Text("Create Event")
@@ -839,6 +895,22 @@ struct CreateEventView: View {
                     Alert(title: Text(alertMessage), dismissButton: .default(Text("OK")))
                 }
             }
+        }
+    }
+    
+    // Helper function to get color for a category
+    func colorForCategory(_ category: Category) -> Color {
+        switch category {
+        case .volunteer:
+            return .volunteerTag
+        case .government:
+            return .governmentTag
+        case .competition:
+            return .competitionTag
+        case .research:
+            return .researchTag
+        case .internship:
+            return .internshipTag
         }
     }
 }
@@ -1069,7 +1141,7 @@ struct StarredActivitiesView: View {
                             Text(starred.opportunity.title)
                                 .font(.headline)
                                 .foregroundColor(.primaryColor)
-                            Text(starred.opportunity.category.rawValue)
+                            Text(starred.opportunity.categories.map { $0.rawValue }.joined(separator: ", "))
                                 .font(.subheadline)
                                 .foregroundColor(.secondaryColor)
                         }
@@ -1094,12 +1166,44 @@ struct StarredActivitiesView: View {
 }
 
 // MARK: - MoreView
+
 struct MoreView: View {
     @EnvironmentObject var viewModel: OpportunityViewModel
     
     var body: some View {
         NavigationView {
             Form {
+                Section(header: Text("Profile")) {
+                    if viewModel.user.isLoggedIn {
+                        HStack {
+                            Text("Username")
+                            Spacer()
+                            Text(viewModel.user.username)
+                                .foregroundColor(.secondaryColor)
+                        }
+                        
+                        HStack(alignment: .top) {
+                            Text("Interests")
+                            Spacer()
+                            VStack(alignment: .trailing) {
+                                ForEach(viewModel.user.interests, id: \.self) { interest in
+                                    Text(interest.rawValue)
+                                        .font(.caption)
+                                        .padding(.vertical, 4)
+                                        .padding(.horizontal, 8)
+                                        .background(Color.secondaryColor)
+                                        .foregroundColor(.white)
+                                        .cornerRadius(10)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 5)
+                    } else {
+                        Text("Please complete the onboarding to view your profile.")
+                            .foregroundColor(.secondaryColor)
+                    }
+                }
+                
                 Section(header: Text("Preferences")) {
                     Toggle(isOn: $viewModel.isDarkMode) {
                         Text("Dark Mode")
@@ -1119,6 +1223,7 @@ struct MoreView: View {
         }
     }
 }
+
 
 // MARK: - AboutView
 struct AboutView: View {
@@ -1148,6 +1253,302 @@ struct AboutView: View {
     }
 }
 
+// MARK: - Onboarding Pages
+
+struct OnboardingPage1: View {
+    var body: some View {
+        VStack(spacing: 30) {
+            Spacer()
+            
+            Image(systemName: "hand.raised.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 150, height: 150)
+                .foregroundColor(.white)
+                .shadow(radius: 10)
+                .transition(.scale)
+            
+            Text("Welcome to ImpactLink!")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            Text("Connect with volunteering opportunities, track your impact, earn badges, and join a community dedicated to making a difference.")
+                .font(.body)
+                .foregroundColor(.white.opacity(0.8))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            Spacer()
+        }
+    }
+}
+
+struct OnboardingPage2: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    @State private var username: String = ""
+    @State private var interests: [Category] = []
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Spacer()
+            
+            Text("Customize Your Profile")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .padding(.top)
+            
+            TextField("Enter your username", text: $username)
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.2)))
+                .foregroundColor(.white)
+                .padding(.horizontal)
+                .accessibilityLabel(Text("Username Input"))
+            
+            Text("Select Your Interests")
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.top)
+            
+            WrapView(items: Category.allCases, selectedItems: $interests) { category, isSelected in
+                Button(action: {
+                    if isSelected {
+                        interests.removeAll { $0 == category }
+                    } else {
+                        interests.append(category)
+                    }
+                }) {
+                    Text(category.rawValue)
+                        .font(.subheadline)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(isSelected ? Color.secondaryColor : Color.white.opacity(0.2))
+                        )
+                        .foregroundColor(isSelected ? .white : .white.opacity(0.8))
+                }
+                .accessibilityLabel(Text("\(category.rawValue) Interest Toggle"))
+            }
+            .padding(.horizontal)
+            
+            Spacer()
+            
+            Button(action: {
+                if username.isEmpty || interests.isEmpty {
+                    alertMessage = "Please enter a username and select at least one interest."
+                    showAlert = true
+                } else {
+                    viewModel.user.username = username
+                    viewModel.user.interests = interests // Save interests
+                    alertMessage = "Profile updated successfully!"
+                    showAlert = true
+                }
+            }) {
+                Text("Save Profile")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.secondaryColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(15)
+                    .padding(.horizontal)
+            }
+            .accessibilityLabel(Text("Save Profile Button"))
+            .alert(isPresented: $showAlert) {
+                Alert(title: Text("Profile"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
+        }
+    }
+}
+
+struct OnboardingPage3: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    @Binding var showOnboarding: Bool
+    @State private var selectedFilters: Set<Category> = []
+    @State private var animateSphere = false
+    
+    var recommendedOpportunities: [Opportunity] {
+        viewModel.opportunities.filter { opportunity in
+            !selectedFilters.isDisjoint(with: opportunity.categories)
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Spacer()
+            
+            Text("Choose Your Interests")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .padding(.top)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(Category.allCases) { category in
+                        Button(action: {
+                            if selectedFilters.contains(category) {
+                                selectedFilters.remove(category)
+                            } else {
+                                selectedFilters.insert(category)
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "checkmark.circle")
+                                    .foregroundColor(selectedFilters.contains(category) ? .white : .white.opacity(0.5))
+                                Text(category.rawValue)
+                                    .font(.subheadline)
+                                    .foregroundColor(.white)
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(selectedFilters.contains(category) ? Color.accentColor : Color.white.opacity(0.2))
+                            )
+                        }
+                        .accessibilityLabel(Text("\(category.rawValue) Filter Toggle"))
+                    }
+                }
+                .padding(.horizontal)
+            }
+            
+            Spacer()
+            
+            if !recommendedOpportunities.isEmpty {
+                Text("Recommended Opportunities")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.bottom, 10)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 20) {
+                        ForEach(recommendedOpportunities) { opportunity in
+                            OpportunityCardView(opportunity: opportunity)
+                                .frame(width: 250)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(Color.white.opacity(0.2))
+                                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+                                )
+                                .overlay(
+                                    // Spherical Animation Overlay
+                                    Circle()
+                                        .stroke(Color.white.opacity(0.5), lineWidth: 2)
+                                        .scaleEffect(animateSphere ? 1.2 : 1.0)
+                                        .opacity(animateSphere ? 0.0 : 1.0)
+                                        .animation(Animation.easeOut(duration: 1).repeatForever(autoreverses: false), value: animateSphere)
+                                )
+                                .onAppear {
+                                    self.animateSphere = true
+                                }
+                                .accessibilityLabel(Text(opportunity.title))
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                // Save selected filters if needed
+                // For example, update the viewModel with selected filters
+                viewModel.selectedCategories = selectedFilters // Ensure your ViewModel can handle this
+                showOnboarding = false
+            }) {
+                Text("Get Started")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.primaryColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(15)
+                    .padding(.horizontal)
+            }
+            .accessibilityLabel(Text("Get Started Button"))
+        }
+        .background(
+            // Spherical Animation or moving gradient
+            MovingGradientBackground()
+        )
+    }
+}
+
+
+// MARK: - WrapView for Interests and Filters
+
+struct WrapView<Data: RandomAccessCollection, Content: View>: View where Data.Element: Identifiable {
+    var items: Data
+    @Binding var selectedItems: [Data.Element]
+    var content: (Data.Element, Bool) -> Content
+    
+    init(items: Data, selectedItems: Binding<[Data.Element]>, @ViewBuilder content: @escaping (Data.Element, Bool) -> Content) {
+        self.items = items
+        self._selectedItems = selectedItems
+        self.content = content
+    }
+    
+    var body: some View {
+        GeometryReader { geometry in
+            self.generateContent(in: geometry)
+        }
+    }
+    
+    private func generateContent(in geometry: GeometryProxy) -> some View {
+        var width = CGFloat.zero
+        var height = CGFloat.zero
+        
+        return ZStack(alignment: .topLeading) {
+            ForEach(items) { item in
+                content(item, selectedItems.contains(where: item as! (Data.Element) throws -> Bool))
+                    .padding([.horizontal, .vertical], 5)
+                    .alignmentGuide(.leading, computeValue: { dimension in
+                        if abs(width - dimension.width) > geometry.size.width {
+                            width = 0
+                            height -= dimension.height
+                        }
+                        let result = width
+                        if item.id == items.last?.id {
+                            width = 0
+                        } else {
+                            width -= dimension.width
+                        }
+                        return result
+                    })
+                    .alignmentGuide(.top, computeValue: { _ in
+                        let result = height
+                        return result
+                    })
+            }
+        }
+    }
+}
+
+// MARK: - Moving Gradient Background
+
+struct MovingGradientBackground: View {
+    @State private var animateGradient = false
+    
+    var body: some View {
+        AngularGradient(gradient: Gradient(colors: [Color.primaryColor, Color.secondaryColor, Color.accentColor, Color.primaryColor]),
+                        center: .center,
+                        startAngle: animateGradient ? .degrees(0) : .degrees(360))
+            .animation(Animation.linear(duration: 10).repeatForever(autoreverses: false), value: animateGradient)
+            .onAppear {
+                animateGradient = true
+            }
+            .edgesIgnoringSafeArea(.all)
+    }
+}
+
+
 // MARK: - OpportunityCardView
 struct OpportunityCardView: View {
     @EnvironmentObject var viewModel: OpportunityViewModel
@@ -1155,50 +1556,66 @@ struct OpportunityCardView: View {
     @State private var animate = false
     
     var body: some View {
-        HStack(alignment: .center, spacing: 20) {
-            // Icon
-            Image(systemName: opportunity.imageName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 50, height: 50)
-                .foregroundColor(.accentColor)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(Color.cardBackgroundColor)
-                        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 5)
-                )
-                .scaleEffect(animate ? 1.0 : 0.8)
-                .opacity(animate ? 1.0 : 0.5)
-                .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
-                .accessibilityLabel(Text(opportunity.title))
-            
-            // Text
-            VStack(alignment: .leading, spacing: 5) {
-                Text(opportunity.title)
-                    .font(.headline)
-                    .foregroundColor(.primaryColor)
-                Text(opportunity.category.rawValue)
-                    .font(.subheadline)
-                    .foregroundColor(.secondaryColor)
-            }
-            Spacer()
-            
-            // Star Button
-            Button(action: {
-                withAnimation {
-                    viewModel.toggleStar(for: opportunity)
-                    if viewModel.user.starredOpportunities.contains(opportunity.id) {
-                        viewModel.addStarredActivity(opportunity: opportunity)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 15) {
+                // Icon
+                Image(systemName: opportunity.imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 50, height: 50)
+                    .foregroundColor(.accentColor)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(Color.cardBackgroundColor)
+                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 5)
+                    )
+                    .scaleEffect(animate ? 1.0 : 0.8)
+                    .opacity(animate ? 1.0 : 0.5)
+                    .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
+                    .accessibilityLabel(Text(opportunity.title))
+                
+                // Text
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(opportunity.title)
+                        .font(.headline)
+                        .foregroundColor(.primaryColor)
+                    Text(opportunity.categories.map { $0.rawValue }.joined(separator: ", "))
+                        .font(.subheadline)
+                        .foregroundColor(.secondaryColor)
+                    
+                    // Tags
+                    HStack {
+                        ForEach(opportunity.categories, id: \.self) { category in
+                            Text(category.rawValue)
+                                .font(.caption)
+                                .padding(.vertical, 4)
+                                .padding(.horizontal, 8)
+                                .background(colorForCategory(category))
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                .accessibilityLabel(Text("\(category.rawValue) Tag"))
+                        }
                     }
                 }
-            }) {
-                Image(systemName: opportunity.isStarred ? "star.fill" : "star")
-                    .foregroundColor(opportunity.isStarred ? .yellow : .gray)
-                    .scaleEffect(opportunity.isStarred ? 1.2 : 1.0)
-                    .animation(.easeInOut(duration: 0.2), value: opportunity.isStarred)
+                Spacer()
+                
+                // Star Button
+                Button(action: {
+                    withAnimation {
+                        viewModel.toggleStar(for: opportunity)
+                        if viewModel.user.starredOpportunities.contains(opportunity.id) {
+                            viewModel.addStarredActivity(opportunity: opportunity)
+                        }
+                    }
+                }) {
+                    Image(systemName: opportunity.isStarred ? "star.fill" : "star")
+                        .foregroundColor(opportunity.isStarred ? .yellow : .gray)
+                        .scaleEffect(opportunity.isStarred ? 1.2 : 1.0)
+                        .animation(.easeInOut(duration: 0.2), value: opportunity.isStarred)
+                }
+                .accessibilityLabel(opportunity.isStarred ? "Unstar Opportunity" : "Star Opportunity")
             }
-            .accessibilityLabel(opportunity.isStarred ? "Unstar Opportunity" : "Star Opportunity")
         }
         .padding()
         .background(
@@ -1208,6 +1625,22 @@ struct OpportunityCardView: View {
         )
         .onAppear {
             self.animate = true
+        }
+    }
+    
+    // Helper function to get color for a category
+    func colorForCategory(_ category: Category) -> Color {
+        switch category {
+        case .volunteer:
+            return .volunteerTag
+        case .government:
+            return .governmentTag
+        case .competition:
+            return .competitionTag
+        case .research:
+            return .researchTag
+        case .internship:
+            return .internshipTag
         }
     }
 }
@@ -1248,8 +1681,8 @@ struct OpportunityDetailView: View {
                     .foregroundColor(.primaryColor)
                     .animation(.none)
                 
-                // Category
-                Text(opportunity.category.rawValue)
+                // Categories
+                Text(opportunity.categories.map { $0.rawValue }.joined(separator: ", "))
                     .font(.title3)
                     .foregroundColor(.secondaryColor)
                 
@@ -1257,6 +1690,20 @@ struct OpportunityDetailView: View {
                 Text(opportunity.description)
                     .font(.body)
                     .foregroundColor(.primaryColor)
+                
+                // Tags
+                HStack {
+                    ForEach(opportunity.categories, id: \.self) { category in
+                        Text(category.rawValue)
+                            .font(.caption)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(colorForCategory(category))
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .accessibilityLabel(Text("\(category.rawValue) Tag"))
+                    }
+                }
                 
                 // Track Time Section
                 VStack(alignment: .leading, spacing: 10) {
@@ -1343,100 +1790,29 @@ struct OpportunityDetailView: View {
             self.animate = true
         }
     }
+    
+    // Helper function to get color for a category
+    func colorForCategory(_ category: Category) -> Color {
+        switch category {
+        case .volunteer:
+            return .volunteerTag
+        case .government:
+            return .governmentTag
+        case .competition:
+            return .competitionTag
+        case .research:
+            return .researchTag
+        case .internship:
+            return .internshipTag
+        }
+    }
 }
 
 // MARK: - Previews
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
-}
-
-struct HomeView_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeView()
-            .environmentObject(OpportunityViewModel())
-    }
-}
-
-struct VolunteerTrackerView_Previews: PreviewProvider {
-    static var previews: some View {
-        VolunteerTrackerView()
-            .environmentObject(OpportunityViewModel())
-    }
-}
-
-struct BadgesView_Previews: PreviewProvider {
-    static var previews: some View {
-        BadgesView()
-            .environmentObject(OpportunityViewModel())
-    }
-}
-
-struct LeaderboardsView_Previews: PreviewProvider {
-    static var previews: some View {
-        LeaderboardsView()
-            .environmentObject(OpportunityViewModel())
-    }
-}
-
-struct CreateEventView_Previews: PreviewProvider {
-    static var previews: some View {
-        CreateEventView()
-            .environmentObject(OpportunityViewModel())
-    }
-}
-
-struct ProfileView_Previews: PreviewProvider {
-    static var previews: some View {
-        ProfileView()
-            .environmentObject(OpportunityViewModel())
-    }
-}
-
-struct OpportunityCardView_Previews: PreviewProvider {
-    static var previews: some View {
-        OpportunityCardView(opportunity: sampleOpportunities[0])
-            .environmentObject(OpportunityViewModel())
-    }
-}
-
 struct OpportunityDetailView_Previews: PreviewProvider {
-    static var previews: some View {
-        OpportunityDetailView(opportunity: sampleOpportunities[0])
-            .environmentObject(OpportunityViewModel())
-    }
+static var previews: some View {
+    OpportunityDetailView(opportunity: sampleOpportunities[0])
+        .environmentObject(OpportunityViewModel())
+}
 }
 
-struct StarredActivitiesView_Previews: PreviewProvider {
-    static var previews: some View {
-        StarredActivitiesView()
-            .environmentObject(OpportunityViewModel())
-    }
-}
-
-struct MoreView_Previews: PreviewProvider {
-    static var previews: some View {
-        MoreView()
-            .environmentObject(OpportunityViewModel())
-    }
-}
-
-struct AboutView_Previews: PreviewProvider {
-    static var previews: some View {
-        AboutView()
-    }
-}
-
-struct CalendarView_Previews: PreviewProvider {
-    static var previews: some View {
-        CalendarView(selectedDate: .constant(Date()))
-    }
-}
-
-struct ImpactGraphView_Previews: PreviewProvider {
-    static var previews: some View {
-        ImpactGraphView()
-            .environmentObject(OpportunityViewModel())
-    }
-}

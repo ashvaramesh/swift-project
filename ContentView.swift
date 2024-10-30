@@ -2181,4 +2181,175 @@ struct OnboardingPage2: View {
     }
 }
 
+// MARK: - Modified OnboardingPage3
+struct OnboardingPage3: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    @Binding var showOnboarding: Bool
+    @State private var selectedFilters = Set<Category>() // Initialize as empty set
+
+    let columns = [GridItem(.adaptive(minimum: 120), spacing: 15)]
+
+    var recommendedOpportunities: [Opportunity] {
+        viewModel.opportunities.filter { opportunity in
+            !selectedFilters.isDisjoint(with: opportunity.categories)
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            Text("Choose Your Interests")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .padding(.top)
+
+            // Filter Selection
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(Category.allCases) { category in
+                        Button(action: {
+                            if selectedFilters.contains(category) {
+                                selectedFilters.remove(category)
+                            } else {
+                                selectedFilters.insert(category)
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "checkmark.circle")
+                                    .foregroundColor(selectedFilters.contains(category) ? .white : .white.opacity(0.5))
+                                Text(category.rawValue)
+                                    .font(.subheadline)
+                                    .foregroundColor(.white)
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(selectedFilters.contains(category) ? Color.accentColor : Color.white.opacity(0.2))
+                            )
+                        }
+                        .accessibilityLabel(Text("\(category.rawValue) Filter Toggle"))
+                    }
+                }
+                .padding(.horizontal)
+            }
+
+            Spacer()
+
+            if !recommendedOpportunities.isEmpty {
+                Text("Recommended Opportunities")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.bottom, 10)
+
+                // Smooth Carousel
+                GeometryReader { geometry in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 20) {
+                            ForEach(recommendedOpportunities) { opportunity in
+                                OpportunityCardView(opportunity: opportunity)
+                                    .frame(width: geometry.size.width * 0.8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .fill(Color.white.opacity(0.2))
+                                            .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+                                    )
+                                    .accessibilityLabel(Text(opportunity.title))
+                            }
+                        }
+                        .padding(.horizontal)
+                        .offset(x: animateCarousel ? -geometry.size.width * 0.8 : 0)
+                        .animation(Animation.linear(duration: Double(recommendedOpportunities.count) * 2).repeatForever(autoreverses: false), value: animateCarousel)
+                        .onAppear {
+                            animateCarousel.toggle()
+                        }
+                    }
+                }
+                .frame(height: 250)
+            }
+
+            Spacer()
+
+            // Get Started Button
+            Button(action: {
+                // Save selected filters as interests
+                viewModel.user.interests = Array(selectedFilters)
+                viewModel.user.saveUserData()
+                showOnboarding = false
+            }) {
+                Text("Get Started")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.secondaryColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(15)
+                    .padding(.horizontal)
+            }
+            .accessibilityLabel(Text("Get Started Button"))
+        }
+        .background(
+            MovingGradientBackground()
+        )
+        .onAppear {
+            // Initialize selectedFilters after the view has been initialized
+            selectedFilters = Set(viewModel.user.interests)
+        }
+    }
+
+    // MARK: - Carousel Animation State
+    @State private var animateCarousel: Bool = false
+}
+
+
+
+// MARK: - Modified WrapView for Single and Multiple Selections
+struct WrapView<Data: RandomAccessCollection, Content: View>: View where Data.Element: Identifiable & Equatable {
+    var items: Data
+    @Binding var selectedItems: [Data.Element]
+    var content: (Data.Element, Bool) -> Content
+    
+    init(items: Data, selectedItems: Binding<[Data.Element]>, @ViewBuilder content: @escaping (Data.Element, Bool) -> Content) {
+        self.items = items
+        self._selectedItems = selectedItems
+        self.content = content
+    }
+    
+    var body: some View {
+        GeometryReader { geometry in
+            self.generateContent(in: geometry)
+        }
+    }
+    
+    private func generateContent(in geometry: GeometryProxy) -> some View {
+        var width = CGFloat.zero
+        var height = CGFloat.zero
+        
+        return ZStack(alignment: .topLeading) {
+            ForEach(items) { item in
+                content(item, selectedItems.contains(item))
+                    .padding([.horizontal, .vertical], 5)
+                    .alignmentGuide(.leading, computeValue: { dimension in
+                        if abs(width - dimension.width) > geometry.size.width {
+                            width = 0
+                            height -= dimension.height
+                        }
+                        let result = width
+                        if item.id == items.last?.id {
+                            width = 0
+                        } else {
+                            width -= dimension.width
+                        }
+                        return result
+                    })
+                    .alignmentGuide(.top, computeValue: { _ in
+                        let result = height
+                        return result
+                    })
+            }
+        }
+    }
+}
 

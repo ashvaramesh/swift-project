@@ -1,4 +1,34 @@
-Changelog and Updates
+## ***ImpactLink***
+
+**Introduction**  
+ImpactLink is a community-focused app connecting high school and college students to volunteer, internship, and civic engagement opportunities. Designed to track impact through logged hours, badges, and achievements, it encourages users to actively participate in community service.
+
+**Setup Instructions**  
+1. **Clone the Repository**: `git clone https://github.com/ashvaramesh/swift-project`
+2. **Install Dependencies**: Open the project in Xcode, navigate to **File > Swift Packages > Add Package Dependency**, and add Firebase’s GitHub link.
+3. **Configure Firebase**: Set up a Firebase project, add your app, and download `GoogleService-Info.plist` to the project root.
+
+**Feature Overview**  
+- **Opportunity Tracking**: Log volunteer hours and activities, view stats, and track achievements.
+- **Starred Activities**: Bookmark opportunities and track activity-specific details in the journal.
+- **Profile Customization**: Add skills, set goals, and choose avatars.
+- **Gamification**: Earn badges based on milestones, view progress in leaderboards.
+- **Dynamic Filters**: Browse by categories like volunteer, government, and environmental impact.
+- **Accessibility**: Screen reader and dark mode support enhance usability.
+
+**Usage Instructions**  
+1. **Onboarding**: New users complete onboarding to set interests, pick an avatar, and get a quick tour.
+2. **Main Navigation**: Access the **Home** for opportunities, **Profile** for personal achievements, and **Leaderboard** for top volunteers.
+3. **Logging Hours**: Go to **Volunteer Tracker** to add time entries and reflect in the journal.
+4. **Creating Events**: Create community events through the **Create Event** section.
+
+**Future Enhancements**  
+- **Real-Time Firebase Updates**: Streamline data sync for immediate feedback across users.
+- **Expanded Accessibility**: Improve navigation for screen reader users and optimize button focus across all pages.
+
+---
+
+***Changelog and Updates***
 
 **9/23/24 (Monday)**  
 - **Data Models**:  

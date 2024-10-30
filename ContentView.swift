@@ -2829,3 +2829,47 @@ struct AddHoursView: View {
     }
 }
 
+
+// MARK: - StarredActivityCardView
+import SwiftUI
+
+struct StarredActivityCardView: View {
+    let starredActivity: StarredActivity
+    
+    var body: some View {
+        HStack {
+            Image(systemName: starredActivity.opportunity.imageName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 50, height: 50)
+                .foregroundColor(.accentColor)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 15)
+                        .fill(Color.cardBackgroundColor)
+                        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 5)
+                )
+                .accessibilityLabel(Text(starredActivity.opportunity.title))
+            
+            VStack(alignment: .leading, spacing: 5) {
+                Text(starredActivity.opportunity.title)
+                    .font(.headline)
+                    .foregroundColor(.primaryColor)
+                Text(starredActivity.opportunity.categories.map { $0.rawValue }.joined(separator: ", "))
+                    .font(.subheadline)
+                    .foregroundColor(.secondaryColor)
+            }
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .foregroundColor(.gray)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.cardBackgroundColor)
+                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
+        )
+    }
+}
+

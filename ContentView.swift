@@ -2672,3 +2672,160 @@ struct OpportunityDetailView: View {
     }
 }
 
+// MARK: - WeeklyHoursBarChart View
+import SwiftUI
+import Charts
+
+struct WeeklyHoursBarChart: View {
+    var data: [String: Double]
+    
+    var body: some View {
+        VStack {
+            Text("Weekly Hours Volunteered")
+                .font(.headline)
+                .foregroundColor(.primaryColor)
+                .padding(.bottom, 5)
+            
+            Chart {
+                ForEach(data.sorted(by: { $0.key < $1.key }), id: \.key) { day, hours in
+                    BarMark(
+                        x: .value("Day", day),
+                        y: .value("Hours", hours)
+                    )
+                    .foregroundStyle(Color.primaryColor)
+                    .accessibilityLabel(Text("\(day): \(hours, specifier: "%.1f") hours"))
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading)
+            }
+            .chartXAxis {
+                AxisMarks(values: data.keys.sorted()) { value in
+                    AxisGridLine()
+                    AxisValueLabel()
+                }
+            }
+            .frame(height: 200)
+        }
+    }
+}
+
+// MARK: - CategoryHoursPieChart View
+import SwiftUI
+import Charts
+
+struct CategoryHoursPieChart: View {
+    var data: [MainCategory: Double]
+    
+    var body: some View {
+        VStack {
+            Text("Hours by Category")
+                .font(.headline)
+                .foregroundColor(.primaryColor)
+                .padding(.bottom, 5)
+            
+            Chart {
+                ForEach(data.keys.sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { category in
+                    if let hours = data[category], hours > 0 {
+                        SectorMark(
+                            angle: .value("Hours", hours),
+                            innerRadius: 0.5,
+                            outerRadius: 0.9
+                        )
+                        .foregroundStyle(colorForCategory(category))
+                        .annotation(position: .overlay) {
+                            Text("\(Int(hours))h")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                        }
+                        .accessibilityLabel(Text("\(category.rawValue): \(hours, specifier: "%.1f") hours"))
+                    }
+                }
+            }
+            .chartLegend(.hidden)
+            .frame(height: 200)
+        }
+    }
+    
+    // Helper function to get color for a main category
+    func colorForCategory(_ category: MainCategory) -> Color {
+        switch category {
+        case .communityImpact:
+            return .volunteerTag
+        case .professionalDevelopment:
+            return .governmentTag
+        case .sustainability:
+            return .environmentalTag
+        case .academics:
+            return .scienceTag
+        }
+    }
+}
+
+
+// MARK: - AddHoursView
+import SwiftUI
+
+struct AddHoursView: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    @Environment(\.presentationMode) var presentationMode
+    
+    @State private var selectedOpportunity: StarredActivity? = nil
+    @State private var hours: String = ""
+    @State private var journal: String = ""
+    @State private var selectedDate: Date = Date()
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Select Activity")) {
+                    Picker("Activity", selection: $selectedOpportunity) {
+                        ForEach(viewModel.user.starredActivities) { starred in
+                            Text(starred.opportunity.title).tag(Optional(starred))
+                        }
+                    }
+                    .accessibilityLabel(Text("Select Activity Picker"))
+                }
+                
+                Section(header: Text("Details")) {
+                    TextField("Hours", text: $hours)
+                        .keyboardType(.decimalPad)
+                        .accessibilityLabel(Text("Hours Input"))
+                    
+                    DatePicker("Date", selection: $selectedDate, displayedComponents: .date)
+                        .accessibilityLabel(Text("Select Date Picker"))
+                    
+                    TextField("Journal Entry", text: $journal)
+                        .accessibilityLabel(Text("Journal Entry Input"))
+                }
+            }
+            .navigationBarTitle("Add Hours", displayMode: .inline)
+            .navigationBarItems(leading: Button("Cancel") {
+                presentationMode.wrappedValue.dismiss()
+            }, trailing: Button("Save") {
+                saveEntry()
+            }
+            .disabled(selectedOpportunity == nil || Double(hours) == nil || hours.isEmpty || journal.isEmpty))
+            .alert(isPresented: $showAlert) {
+                Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
+        }
+    }
+    
+    func saveEntry() {
+        guard let starred = selectedOpportunity,
+              let hoursDouble = Double(hours),
+              !journal.isEmpty else {
+            alertMessage = "Please fill in all fields correctly."
+            showAlert = true
+            return
+        }
+        
+        let newEntry = ActivityEntry(id: UUID(), date: selectedDate, hours: hoursDouble, journal: journal)
+        viewModel.addJournalEntry(opportunity: starred.opportunity, entry: newEntry)
+        presentationMode.wrappedValue.dismiss()
+    }
+}
+

@@ -2489,3 +2489,186 @@ struct OpportunityCardView: View {
 }
 
 
+// MARK: - OpportunityDetailView
+struct OpportunityDetailView: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    @State private var animate = false
+    @State private var timeSpent: String = ""
+    @State private var showAlert = false
+    let opportunity: Opportunity
+    @State private var safetyCheckedIn: Bool = false
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Icon
+                Image(systemName: opportunity.imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .foregroundColor(.accentColor)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 25)
+                            .fill(Color.cardBackgroundColor)
+                            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 10)
+                    )
+                    .scaleEffect(animate ? 1.0 : 0.5)
+                    .opacity(animate ? 1.0 : 0.0)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: animate)
+                    .accessibilityLabel(Text(opportunity.title))
+                
+                // Title
+                Text(opportunity.title)
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primaryColor)
+                    .animation(.none)
+                
+                // Categories
+                Text(opportunity.categories.map { $0.rawValue }.joined(separator: ", "))
+                    .font(.title3)
+                    .foregroundColor(.secondaryColor)
+                
+                // Description
+                Text(opportunity.description)
+                    .font(.body)
+                    .foregroundColor(.primaryColor)
+                
+                // Tags
+                HStack {
+                    ForEach(opportunity.categories, id: \.self) { category in
+                        Text(category.rawValue)
+                            .font(.caption)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(colorForCategory(category))
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .accessibilityLabel(Text("\(category.rawValue) Tag"))
+                    }
+                }
+                
+                // Track Time Section
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Track Time Spent")
+                        .font(.headline)
+                        .foregroundColor(.primaryColor)
+                    
+                    HStack {
+                        TextField("Hours", text: $timeSpent)
+                            .keyboardType(.decimalPad)
+                            .padding()
+                            .background(RoundedRectangle(cornerRadius: 10).stroke(Color.secondaryColor, lineWidth: 1))
+                            .accessibilityLabel(Text("Hours Spent"))
+                        
+                        Button(action: {
+                            if let hours = Double(timeSpent) {
+                                viewModel.addTime(for: opportunity, hours: hours)
+                                timeSpent = ""
+                                showAlert = true
+                            }
+                        }) {
+                            Text("Add")
+                                .fontWeight(.semibold)
+                                .padding()
+                                .background(Color.primaryColor)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                        .disabled(Double(timeSpent) == nil)
+                        .accessibilityLabel(Text("Add Time Button"))
+                    }
+                }
+                
+                // Safety Check-In
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Safety & Wellness")
+                        .font(.headline)
+                        .foregroundColor(.primaryColor)
+
+                    Toggle(isOn: $safetyCheckedIn) {
+                        Text("Check-In for Safety")
+                            .foregroundColor(.primaryColor)
+                    }
+                    .onChange(of: safetyCheckedIn) { oldValue, newValue in
+                        if newValue {
+                            // Handle safety check-in logic here
+                        }
+                    }
+                    .accessibilityLabel(Text("Safety Check-In Toggle"))
+                }
+                .padding(.horizontal)
+
+                // Mark as Completed Button
+                Button(action: {
+                    withAnimation {
+                        viewModel.markCompleted(for: opportunity)
+                    }
+                }) {
+                    Text(opportunity.isCompleted ? "Completed ✅" : "Mark as Completed")
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(opportunity.isCompleted ? Color.gray : Color.primaryColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(15)
+                        .shadow(color: opportunity.isCompleted ? Color.clear : Color.primaryColor.opacity(0.4), radius: 5, x: 0, y: 5)
+                }
+                .disabled(opportunity.isCompleted)
+                .padding(.top, 20)
+                .scaleEffect(animate ? 1.0 : 0.8)
+                .opacity(animate ? 1.0 : 0.0)
+                .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: animate)
+                .accessibilityLabel(Text(opportunity.isCompleted ? "Completed" : "Mark as Completed Button"))
+                
+                Spacer()
+            }
+            .padding()
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(title: Text("Success"), message: Text("Time added successfully!"), dismissButton: .default(Text("OK")))
+        }
+        .background(Color.backgroundColor.edgesIgnoringSafeArea(.all))
+        .onAppear {
+            self.animate = true
+        }
+    }
+    
+    // Helper function to get color for a category
+    func colorForCategory(_ category: Category) -> Color {
+        switch category {
+        case .volunteer:
+            return .volunteerTag
+        case .government:
+            return .governmentTag
+        case .competition:
+            return .competitionTag
+        case .science:
+            return .scienceTag
+        case .internship:
+            return .internshipTag
+        case .education:
+            return .educationTag
+        case .environmental:
+            return .environmentalTag
+        case .healthcare:
+            return .healthcareTag
+        case .communityService:
+            return .communityServiceTag
+        case .artsCulture:
+            return .artsCultureTag
+        case .technology:
+            return .technologyTag
+        case .advocacy:
+            return .advocacyTag
+        case .leadership:
+            return .leadershipTag
+        case .math:
+            return .mathTag
+        case .engineering:
+            return .engineeringTag
+        }
+    }
+}
+

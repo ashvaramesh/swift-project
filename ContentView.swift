@@ -1859,3 +1859,326 @@ struct AboutView: View {
     }
 }
 
+// MARK: - Onboarding Pages
+// MARK: - OnboardingPage1
+struct OnboardingPage1: View {
+    var body: some View {
+        ZStack {
+            MovingGradientBackground() // Use the gradient background
+            
+            VStack(spacing: 30) {
+                Spacer()
+                
+                Image(systemName: "hand.raised.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 150, height: 150)
+                    .foregroundColor(.white)
+                    .shadow(radius: 10)
+                    .transition(.scale)
+                
+                Text("Welcome to ImpactLink!")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                
+                Text("Connect with volunteering opportunities, track your impact, earn badges, and join a community dedicated to making a difference.")
+                    .font(.body)
+                    .foregroundColor(.white.opacity(0.8))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                
+                Spacer()
+            }
+        }
+    }
+}
+
+
+// MARK: - OnboardingPage2 (Updated with Binding)
+struct OnboardingPage2: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    @Binding var showOnboarding: Bool
+    @State private var email: String = ""
+    @State private var password: String = ""
+    @State private var selectedGrade: Grade? = nil
+    @State private var selectedState: String = "Illinois" // Default State
+    @State private var selectedCounty: String = "Adams" // Default County
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    @State private var isOrganizationSheetPresented: Bool = false
+    @State private var organizationName: String = ""
+    @State private var contactName: String = ""
+    @State private var isOrganizationAccount: Bool = false
+    @State private var isSignUpMode: Bool = true
+    @State private var errorMessage: String = ""
+    @State private var usernameInput: String = ""
+
+
+    // List of States (for now, only Illinois is populated with counties)
+    let states = ["Illinois", "Other State"] // Add more states as needed
+
+    // Illinois Counties
+    let illinoisCounties = [
+        "Adams", "Alexander", "Bond", "Boone", "Brown", "Bureau", "Calhoun",
+        "Carroll", "Cass", "Champaign", "Christian", "Clark", "Clay", "Clinton",
+        "Coles", "Cook", "Crawford", "Cumberland", "Dekalb", "Dewitt", "Douglas",
+        "DuPage", "Edgar", "Edwards", "Effingham", "Fayette", "Ford",
+        "Franklin", "Fulton", "Gallatin", "Greene", "Grundy", "Hamilton",
+        "Hancock", "Hardin", "Henderson", "Henry", "Iroquois", "Jackson",
+        "Jasper", "Jefferson", "Jersey", "Jo Daviess", "Johnson", "Kane",
+        "Kankakee", "Kendall", "Knox", "LaSalle", "Lake", "Lawrence", "Lee",
+        "Livingston", "Logan", "Macon", "Macoupin", "Madison", "Marion",
+        "Marshall", "Mason", "Massac", "McDonough", "McHenry", "McLean",
+        "Menard", "Mercer", "Monroe", "Montgomery", "Morgan", "Moultrie",
+        "Ogle", "Peoria", "Perry", "Piatt", "Pike", "Pope", "Pulaski",
+        "Putnam", "Randolph", "Richland", "Rock Island", "Saline", "Sangamon",
+        "Schuyler", "Scott", "Shelby", "St. Clair", "Stark", "Stephenson",
+        "Tazewell", "Union", "Vermilion", "Wabash", "Warren", "Washington",
+        "Wayne", "White", "Whiteside", "Will", "Williamson", "Winnebago",
+        "Woodford"
+    ]
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            Text("Log in or Sign up")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .padding(.top)
+
+            // Email Field
+            TextField("Enter your email", text: $email)
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.2)))
+                .foregroundColor(.white)
+                .padding(.horizontal)
+                .keyboardType(.emailAddress)
+                .autocapitalization(.none)
+                .accessibilityLabel(Text("Email Input"))
+
+            // Password Field
+            SecureField("Enter your password", text: $password)
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.2)))
+                .foregroundColor(.white)
+                .padding(.horizontal)
+                .accessibilityLabel(Text("Password Input"))
+            
+            // Add a TextField for username
+            TextField("Enter your username", text: $usernameInput)
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.2)))
+                .foregroundColor(.white)
+                .padding(.horizontal)
+                .accessibilityLabel(Text("Username Input"))
+            
+            // Organization or School
+            HStack {
+                Text("Organization or School?")
+                    .foregroundColor(.white.opacity(0.8))
+                Button(action: {
+                    isOrganizationSheetPresented = true
+                }) {
+                    Text("Click here")
+                        .underline()
+                        .foregroundColor(.secondaryColor)
+                }
+                .sheet(isPresented: $isOrganizationSheetPresented) {
+                    OrganizationSheet(
+                        isPresented: $isOrganizationSheetPresented,
+                        organizationName: $organizationName,
+                        contactName: $contactName,
+                        isOrganizationAccount: $isOrganizationAccount
+                    )
+                }
+                .accessibilityLabel(Text("Organization Click Here Button"))
+                
+                if isOrganizationAccount {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .accessibilityHidden(true)
+                }
+            }
+            .padding(.horizontal)
+
+            // Grade Selection
+            Text("Select Your Grade")
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.top)
+
+            // Use LazyVGrid for Grade Selection
+            let columns = [GridItem(.adaptive(minimum: 150), spacing: 15)]
+            LazyVGrid(columns: columns, spacing: 10) {
+                ForEach(Grade.allCases) { gradeOption in
+                    Button(action: {
+                        selectedGrade = selectedGrade == gradeOption ? nil : gradeOption
+                    }) {
+                        Text(gradeOption.rawValue)
+                            .font(.subheadline)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(selectedGrade == gradeOption ? Color.secondaryColor : Color.white.opacity(0.2))
+                            )
+                            .foregroundColor(selectedGrade == gradeOption ? .white : .white.opacity(0.8))
+                    }
+                    .accessibilityLabel(Text("\(gradeOption.rawValue) Grade Toggle"))
+                }
+            }
+            .padding(.horizontal)
+
+            // Select Your Location
+            HStack(spacing: 10) {
+                Image(systemName: "location.fill")
+                    .foregroundColor(.white)
+                Text("Select Your Location")
+                    .font(.headline)
+                    .foregroundColor(.white)
+            }
+            .padding(.top, 20)
+
+            // State Dropdown
+            Picker("Select State", selection: $selectedState) {
+                ForEach(states, id: \.self) { state in
+                    Text(state).tag(state)
+                }
+            }
+            .pickerStyle(MenuPickerStyle())
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.2)))
+            .foregroundColor(.white)
+            .padding(.horizontal)
+            .accessibilityLabel(Text("Select State Picker"))
+
+            // County Dropdown (only show for Illinois)
+            if selectedState == "Illinois" {
+                Picker("Select County", selection: $selectedCounty) {
+                    ForEach(illinoisCounties, id: \.self) { county in
+                        Text(county).tag(county)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.2)))
+                .foregroundColor(.white)
+                .padding(.horizontal)
+                .accessibilityLabel(Text("Select County Picker"))
+            } else {
+                // Placeholder or alternative counties for other states can be added here
+                Picker("Select County", selection: $selectedCounty) {
+                    Text("N/A").tag("N/A")
+                }
+                .pickerStyle(MenuPickerStyle())
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.gray.opacity(0.2)))
+                .foregroundColor(.white)
+                .padding(.horizontal)
+                .disabled(true)
+                .accessibilityLabel(Text("Select County Picker Disabled"))
+            }
+
+            Spacer()
+
+            // Save Profile Button
+            Button(action: {
+                if email.isEmpty || password.isEmpty || selectedGrade == nil {
+                    alertMessage = "Please fill in all fields."
+                    showAlert = true
+                } else {
+                    if isSignUpMode {
+                        viewModel.signUp(email: email, password: password) { result in
+                            switch result {
+                            case .success():
+                                // Update display name
+                                if let currentUser = Auth.auth().currentUser {
+                                    let changeRequest = currentUser.createProfileChangeRequest()
+                                    changeRequest.displayName = usernameInput
+                                    changeRequest.commitChanges { error in
+                                        if let error = error {
+                                            alertMessage = error.localizedDescription
+                                            showAlert = true
+                                        } else {
+                                            // Save additional user data
+                                            viewModel.user.grade = selectedGrade
+                                            viewModel.user.selectedState = selectedState
+                                            viewModel.user.selectedCounty = selectedCounty
+                                            viewModel.user.isOrganizationAccount = isOrganizationAccount
+                                            viewModel.user.organizationName = organizationName
+                                            viewModel.user.contactName = contactName
+                                            viewModel.user.saveUserData()
+                                            alertMessage = "Sign Up Successful!"
+                                            showAlert = true
+                                            showOnboarding = false
+                                        }
+                                    }
+                                }
+                            case .failure(let error):
+                                alertMessage = error.localizedDescription
+                                showAlert = true
+                            }
+                        }
+
+                    } else {
+                        viewModel.logIn(email: email, password: password) { result in
+                            switch result {
+                            case .success():
+                                // Load additional user data
+                                viewModel.user.grade = selectedGrade
+                                viewModel.user.selectedState = selectedState
+                                viewModel.user.selectedCounty = selectedCounty
+                                viewModel.user.isOrganizationAccount = isOrganizationAccount
+                                viewModel.user.organizationName = organizationName
+                                viewModel.user.contactName = contactName
+                                viewModel.user.saveUserData()
+                                alertMessage = "Login Successful!"
+                                showAlert = true
+                                showOnboarding = false
+                            case .failure(let error):
+                                alertMessage = error.localizedDescription
+                                showAlert = true
+                            }
+                        }
+                    }
+                }
+            }) {
+                Text(isSignUpMode ? "Sign Up" : "Log In")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(isSignUpMode ? Color.secondaryColor : Color.primaryColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(15)
+                    .padding(.horizontal)
+                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 5)
+            }
+            .padding(.bottom, 50)
+            .alert(isPresented: $showAlert) {
+                Alert(title: Text("Profile"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
+            
+            // Toggle between Sign Up and Log In
+            HStack {
+                Text(isSignUpMode ? "Already have an account?" : "Don't have an account?")
+                    .foregroundColor(.white.opacity(0.8))
+                Button(action: {
+                    isSignUpMode.toggle()
+                }) {
+                    Text(isSignUpMode ? "Log In" : "Sign Up")
+                        .underline()
+                        .foregroundColor(.secondaryColor)
+                }
+                .accessibilityLabel(Text("Switch Authentication Mode Button"))
+            }
+            .padding(.horizontal)
+        }
+    }
+}
+
+

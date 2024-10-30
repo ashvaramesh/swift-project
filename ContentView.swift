@@ -2353,3 +2353,139 @@ struct WrapView<Data: RandomAccessCollection, Content: View>: View where Data.El
     }
 }
 
+// MARK: - Moving Gradient Background
+struct MovingGradientBackground: View {
+    @State private var animateGradient = false
+    
+    private let startColor: Color = .blue
+    private let endColor: Color = .green
+    
+    var body: some View {
+        LinearGradient(colors: [startColor, endColor], startPoint: .topLeading, endPoint: .bottomTrailing)
+            .edgesIgnoringSafeArea(.all) // Make sure it covers the entire screen
+            .hueRotation(.degrees(animateGradient ? 45 : 0)) // Apply hue rotation
+            .onAppear {
+                withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
+                    animateGradient.toggle()
+                }
+            }
+    }
+}
+
+
+
+// MARK: - OpportunityCardView
+struct OpportunityCardView: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    let opportunity: Opportunity
+    @State private var animate = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 15) {
+                // Icon
+                Image(systemName: opportunity.imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 50, height: 50)
+                    .foregroundColor(.accentColor)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(Color.cardBackgroundColor)
+                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 5)
+                    )
+                    .scaleEffect(animate ? 1.0 : 0.8)
+                    .opacity(animate ? 1.0 : 0.5)
+                    .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
+                    .accessibilityLabel(Text(opportunity.title))
+                
+                // Text
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(opportunity.title)
+                        .font(.headline)
+                        .foregroundColor(.primaryColor)
+                    //Text(opportunity.categories.map { $0.rawValue }.joined(separator: ", "))
+                     //   .font(.subheadline)
+                      //  .foregroundColor(.secondaryColor)
+                    
+                    // Tags
+                    HStack {
+                        ForEach(opportunity.categories, id: \.self) { category in
+                            Text(category.rawValue)
+                                .font(.caption)
+                                .padding(.vertical, 4)
+                                .padding(.horizontal, 8)
+                                .background(colorForCategory(category))
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                .accessibilityLabel(Text("\(category.rawValue) Tag"))
+                        }
+                    }
+                }
+                Spacer()
+                
+                // Star Button
+                Button(action: {
+                    withAnimation {
+                        viewModel.toggleStar(for: opportunity)
+                    }
+                }) {
+                    Image(systemName: opportunity.isStarred ? "star.fill" : "star")
+                        .foregroundColor(opportunity.isStarred ? .yellow : .gray)
+                        .scaleEffect(opportunity.isStarred ? 1.2 : 1.0)
+                        .animation(.easeInOut(duration: 0.2), value: opportunity.isStarred)
+                }
+                .accessibilityLabel(opportunity.isStarred ? "Unstar Opportunity" : "Star Opportunity")
+
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.cardBackgroundColor)
+                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 5)
+        )
+        .onAppear {
+            self.animate = true
+        }
+    }
+    
+    // Helper function to get color for a category
+    func colorForCategory(_ category: Category) -> Color {
+        switch category {
+        case .volunteer:
+            return .volunteerTag
+        case .government:
+            return .governmentTag
+        case .competition:
+            return .competitionTag
+        case .science:
+            return .scienceTag
+        case .internship:
+            return .internshipTag
+        case .education:
+            return .educationTag
+        case .environmental:
+            return .environmentalTag
+        case .healthcare:
+            return .healthcareTag
+        case .communityService:
+            return .communityServiceTag
+        case .artsCulture:
+            return .artsCultureTag
+        case .technology:
+            return .technologyTag
+        case .advocacy:
+            return .advocacyTag
+        case .leadership:
+            return .leadershipTag
+        case .math:
+            return .mathTag
+        case .engineering:
+            return .engineeringTag
+        }
+    }
+}
+
+

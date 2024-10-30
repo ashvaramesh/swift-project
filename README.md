@@ -116,3 +116,69 @@ Changelog and Updates
 - **UI Finalization**:  
   - All UI for the backend has been finalized. Need to integrate Firebase.
 
+Here's the continuation of your changelog in the same format:
+
+---
+
+**10/19/24 (Saturday)**
+
+- **Starred Activities Detail Enhancements:**
+  - Added `StarredActivityDetailView` to showcase individual starred activities with options for adding journal entries and viewing detailed information.
+  - Bug Fix: Fixed a bug where star status did not save consistently across app sessions.
+
+**10/20/24 (Sunday)**
+
+- **Add Journal Entry:**
+  - Implemented `AddJournalEntryView` to allow users to record journal entries for each starred activity, tracking hours and reflections.
+  - **Category-Based Tracking:** Enhanced journal entries to link with specific categories for easier analysis.
+  - Bug Fix: Resolved an issue with entry date selection not saving correctly.
+
+**10/21/24 (Monday)**
+
+- **Weekly and Category Impact Charts:**
+  - Developed `WeeklyHoursBarChart` and `CategoryHoursPieChart` views to visually track hours spent weekly and by category.
+  - **Dynamic Data Update**: Charts automatically update when new hours are logged by users.
+  - Bug Fix: Fixed an issue where chart data didn’t reflect recent entries in real-time.
+
+**10/22/24 (Tuesday)**
+
+- **User Interface Improvements:**
+  - Polished UI elements, ensuring consistent padding and alignment for a smoother experience.
+  - **Opportunity Tracking Enhancements**: Added a toggle to mark opportunities as completed directly in `OpportunityDetailView`.
+  - Bug Fix: Corrected layout issues on smaller screens, ensuring UI compatibility across devices.
+
+**10/23/24 (Wednesday)**
+
+- **Starred Activity Context Menus:**
+  - Created context menus within `StarredActivityCardView` to allow users to quickly delete or edit entries.
+  - **Interaction Animations**: Improved animations for smoother transitions when toggling starred status on opportunities.
+  - Bug Fix: Resolved accessibility issues, adding missing labels and improving button focus.
+
+**10/24/24 (Thursday)**
+
+- **Data Model Enhancements:**
+  - Expanded the data model to accommodate `ActivityEntry` for logging hours and journal reflections, enhancing user interaction tracking.
+  - **Integration with Firebase**: Began Firebase integration to allow storage and retrieval of user-specific data, such as starred activities and journal entries.
+  - Bug Fix: Fixed a bug in the `ProfileView` where skill and goal selections were not saving correctly.
+
+**10/25/24 (Friday)**
+
+- **AddHoursView Enhancements:**
+  - Implemented `AddHoursView` with a form for selecting activities, logging hours, and writing journal entries.
+  - **Form Validation**: Added input validation to ensure required fields are completed before submission.
+  - Bug Fix: Resolved an issue where hours were not correctly calculated in impact tracking graphs.
+
+**10/26/24 (Saturday)**
+
+- **OpportunityCardView Accessibility:**
+  - Improved accessibility for `OpportunityCardView` by adding labels for categories and star toggle.
+  - **Color Enhancements**: Refined tag colors to enhance readability across all themes.
+  - Bug Fix: Corrected an animation delay that caused visual stuttering when loading cards.
+
+**10/27/24 (Sunday)**
+
+- **Profile Customization Completion:**
+  - Finalized user profile customization options, enabling skills, goals, and avatar selections.
+  - **UI Polishing**: Adjusted card corner radii and shadows for a more cohesive visual appearance.
+  - Bug Fix: Fixed an issue with the `Save` button not appearing in some views.
+

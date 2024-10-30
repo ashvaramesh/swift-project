@@ -116,7 +116,6 @@ Changelog and Updates
 - **UI Finalization**:  
   - All UI for the backend has been finalized. Need to integrate Firebase.
 
-Here's the continuation of your changelog in the same format:
 
 ---
 

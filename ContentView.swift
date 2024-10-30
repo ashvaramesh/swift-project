@@ -2873,3 +2873,283 @@ struct StarredActivityCardView: View {
     }
 }
 
+// MARK: - StarredActivityDetailView
+import SwiftUI
+
+struct StarredActivityDetailView: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    @Environment(\.presentationMode) var presentationMode
+    
+    @State var starredActivity: StarredActivity
+    @State private var showingAddEntry = false
+    @State private var showDeleteAlert = false
+    @State private var entryToDelete: ActivityEntry? = nil
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Activity Info
+                HStack {
+                    Image(systemName: starredActivity.opportunity.imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .foregroundColor(.accentColor)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.cardBackgroundColor)
+                                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 5)
+                        )
+                        .accessibilityLabel(Text(starredActivity.opportunity.title))
+                    
+                    VStack(alignment: .leading) {
+                        Text(starredActivity.opportunity.title)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primaryColor)
+                        Text(starredActivity.opportunity.categories.map { $0.rawValue }.joined(separator: ", "))
+                            .font(.subheadline)
+                            .foregroundColor(.secondaryColor)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+                
+                // Journal Entries
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Journal Entries")
+                            .font(.headline)
+                            .foregroundColor(.primaryColor)
+                        Spacer()
+                        Button(action: {
+                            showingAddEntry = true
+                        }) {
+                            Image(systemName: "plus.circle.fill")
+                                .resizable()
+                                .frame(width: 25, height: 25)
+                                .foregroundColor(.primaryColor)
+                        }
+                        .accessibilityLabel(Text("Add Journal Entry Button"))
+                    }
+                    .padding(.horizontal)
+                    
+                    if starredActivity.entries.isEmpty {
+                        Text("No journal entries yet.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondaryColor)
+                            .padding(.horizontal)
+                    } else {
+                        LazyVStack(spacing: 15) {
+                            ForEach(starredActivity.entries.sorted(by: { $0.date > $1.date })) { entry in
+                                VStack(alignment: .leading, spacing: 5) {
+                                    HStack {
+                                        Text(entry.date, style: .date)
+                                            .font(.headline)
+                                            .foregroundColor(.primaryColor)
+                                        Spacer()
+                                        Text("\(entry.hours, specifier: "%.1f") hrs")
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondaryColor)
+                                    }
+                                    Text(entry.journal)
+                                        .font(.body)
+                                        .foregroundColor(.primaryColor)
+                                }
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .fill(Color.cardBackgroundColor)
+                                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 5)
+                                )
+                                .contextMenu {
+                                    Button(action: {
+                                        entryToDelete = entry
+                                        showDeleteAlert = true
+                                    }) {
+                                        Text("Delete Entry")
+                                        Image(systemName: "trash")
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding(.top)
+        }
+        .navigationBarTitle("Activity Details", displayMode: .inline)
+        .sheet(isPresented: $showingAddEntry) {
+            AddJournalEntryView(starredActivity: $starredActivity)
+                .environmentObject(viewModel)
+        }
+        .alert(isPresented: $showDeleteAlert) {
+            Alert(title: Text("Delete Entry"),
+                  message: Text("Are you sure you want to delete this entry?"),
+                  primaryButton: .destructive(Text("Delete")) {
+                   if let entry = entryToDelete {
+                    viewModel.removeActivityEntry(opportunity: starredActivity.opportunity, entry: entry)
+                    refreshStarredActivity()
+                   }
+
+                  },
+                  secondaryButton: .cancel())
+        }
+    }
+    
+    func refreshStarredActivity() {
+        if let index = viewModel.user.starredActivities.firstIndex(where: { $0.id == starredActivity.id }) {
+            viewModel.user.starredActivities[index] = starredActivity
+        }
+    }
+}
+
+// MARK: - AddJournalEntryView
+import SwiftUI
+
+struct AddJournalEntryView: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    @Environment(\.presentationMode) var presentationMode
+    
+    @Binding var starredActivity: StarredActivity
+    
+    @State private var selectedDate: Date = Date()
+    @State private var hours: String = ""
+    @State private var journal: String = ""
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Date")) {
+                    DatePicker("Select Date", selection: $selectedDate, displayedComponents: .date)
+                        .accessibilityLabel(Text("Select Date Picker"))
+                }
+                
+                Section(header: Text("Hours")) {
+                    TextField("Enter hours", text: $hours)
+                        .keyboardType(.decimalPad)
+                        .accessibilityLabel(Text("Hours Input"))
+                }
+                
+                Section(header: Text("Journal Entry")) {
+                    TextEditor(text: $journal)
+                        .frame(height: 150)
+                        .accessibilityLabel(Text("Journal Entry TextEditor"))
+                }
+            }
+            .navigationBarTitle("Add Entry", displayMode: .inline)
+            .navigationBarItems(leading: Button("Cancel") {
+                presentationMode.wrappedValue.dismiss()
+            }, trailing: Button("Save") {
+                saveEntry()
+            }
+            .disabled(hours.isEmpty || journal.isEmpty || Double(hours) == nil))
+            .alert(isPresented: $showAlert) {
+                Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
+        }
+    }
+    
+    func saveEntry() {
+        guard let hoursDouble = Double(hours), !journal.isEmpty else {
+            alertMessage = "Please fill in all fields correctly."
+            showAlert = true
+            return
+        }
+        
+        let newEntry = ActivityEntry(id: UUID(), date: selectedDate, hours: hoursDouble, journal: journal)
+        viewModel.addJournalEntry(opportunity: starredActivity.opportunity, entry: newEntry)
+        presentationMode.wrappedValue.dismiss()
+    }
+}
+
+struct AddJournalEntryView_Previews: PreviewProvider {
+    static var previews: some View {
+        AddJournalEntryView(starredActivity: .constant(StarredActivity(
+            id: UUID(),
+            opportunity: sampleOpportunities[0],
+            entries: []
+        )))
+        .environmentObject(OpportunityViewModel())
+    }
+}
+
+struct StarredActivityDetailView_Previews: PreviewProvider {
+    static var previews: some View {
+        StarredActivityDetailView(starredActivity: StarredActivity(
+            id: UUID(),
+            opportunity: sampleOpportunities[0],
+            entries: []
+        ))
+        .environmentObject(OpportunityViewModel())
+    }
+}
+
+struct StarredActivityCardView_Previews: PreviewProvider {
+    static var previews: some View {
+        StarredActivityCardView(starredActivity: StarredActivity(
+            id: UUID(),
+            opportunity: sampleOpportunities[0],
+            entries: []
+        ))
+        .previewLayout(.sizeThatFits)
+        .environmentObject(OpportunityViewModel())
+    }
+}
+
+struct AddHoursView_Previews: PreviewProvider {
+    static var previews: some View {
+        AddHoursView()
+            .environmentObject(OpportunityViewModel())
+    }
+}
+
+struct CategoryHoursPieChart_Previews: PreviewProvider {
+    static var previews: some View {
+        CategoryHoursPieChart(data: [
+            .communityImpact: 15,
+            .professionalDevelopment: 10,
+            .sustainability: 5,
+            .academics: 20
+        ])
+        .previewLayout(.sizeThatFits)
+    }
+}
+
+
+struct WeeklyHoursBarChart_Previews: PreviewProvider {
+    static var previews: some View {
+        WeeklyHoursBarChart(data: [
+            "Mon": 5,
+            "Tue": 3,
+            "Wed": 4,
+            "Thu": 2,
+            "Fri": 6,
+            "Sat": 0,
+            "Sun": 1
+        ])
+        .previewLayout(.sizeThatFits)
+    }
+}
+
+
+// MARK: - Previews
+struct OpportunityDetailView_Previews: PreviewProvider {
+static var previews: some View {
+    OpportunityDetailView(opportunity: sampleOpportunities[0])
+        .environmentObject(OpportunityViewModel())
+}
+}
+
+
+
+
+
+
+

@@ -211,3 +211,38 @@ ImpactLink is a community-focused app connecting high school and college student
   - **UI Polishing**: Adjusted card corner radii and shadows for a more cohesive visual appearance.
   - Bug Fix: Fixed an issue with the `Save` button not appearing in some views.
 
+Unit 12:
+### 11/11/24 (Monday)
+
+**Chatbot Integration Planning**
+- **Requirement Analysis**: Defined objectives and functionalities for integrating a ChatGPT-powered chatbot to assist users with advice and guidance on various opportunities.
+- **Model Creation**: Developed the `ChatMessage` model to represent individual messages between users and the assistant.
+- **ViewModel Setup**: Initiated the creation of `ChatViewModel` to handle API communications with OpenAI's ChatGPT.
+
+### 11/12/24 (Tuesday)
+
+**ChatViewModel Development**
+- **API Communication**: Implemented network requests within `ChatViewModel` using `URLSession` and `Combine` to send user messages to the ChatGPT API and receive responses.
+- **Error Handling**: Added comprehensive error handling to manage API response errors and network issues gracefully.
+- **Data Parsing**: Defined `OpenAIResponse`, `Choice`, `Message`, and `Usage` structs to decode JSON responses from the ChatGPT API.
+
+### 11/13/24 (Wednesday)
+
+**ChatView UI Implementation**
+- **Interface Design**: Created `ChatView` with a user-friendly interface displaying conversation history and an input field for user messages.
+- **Message Styling**: Differentiated between user and assistant messages with distinct styling and alignment for clarity.
+- **Loading Indicators**: Integrated `ProgressView` to indicate when the chatbot is processing a response.
+
+### 11/14/24 (Thursday)
+
+**Integration into Main App**
+- **TabView Update**: Added a new **Chat** tab to the existing `TabView` in `ContentView`, allowing users to access the chatbot alongside other app sections.
+- **Environment Objects**: Ensured `ChatView` has access to necessary environment objects by passing `OpportunityViewModel` through `.environmentObject(viewModel)`.
+
+### 11/15/24 (Friday)
+
+**Enhancements and Accessibility**
+- **Welcome Message**: Configured `ChatView` to display an initial welcome message from the assistant upon first launch.
+- **Accessibility Improvements**: Added `accessibilityLabel` modifiers to all interactive elements within `ChatView` to support VoiceOver and enhance usability for all users.
+- **API Key Security**: Implemented a secure method to handle the OpenAI API key by recommending the use of a `Secrets.plist` file an
+

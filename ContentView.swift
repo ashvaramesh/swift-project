@@ -3151,5 +3151,300 @@ static var previews: some View {
 
 
 
+// Mark: CHATBOT
 
+import SwiftUI
+import Combine
+
+// MARK: - ChatMessage Model
+struct ChatMessage: Identifiable, Codable {
+    let id = UUID()
+    let role: String // "user" or "assistant"
+    let content: String
+}
+
+// MARK: - OpenAI Response Models
+struct OpenAIResponse: Codable {
+    let id: String
+    let object: String
+    let created: Int
+    let choices: [Choice]
+    let usage: Usage
+}
+
+struct Choice: Codable {
+    let index: Int
+    let message: Message
+    let finish_reason: String?
+}
+
+struct Message: Codable {
+    let role: String
+    let content: String
+}
+
+struct Usage: Codable {
+    let prompt_tokens: Int
+    let completion_tokens: Int
+    let total_tokens: Int
+}
+
+// MARK: - ChatViewModel
+class ChatViewModel: ObservableObject {
+    @Published var messages: [ChatMessage] = []
+    @Published var userInput: String = ""
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String = ""
+    
+    private var cancellables = Set<AnyCancellable>()
+    
+    // Replace with your actual OpenAI API key
+    private let apiKey: String = "YOUR_OPENAI_API_KEY"
+    private let apiURL = "https://api.openai.com/v1/chat/completions"
+    
+    func sendMessage() {
+        let trimmedInput = userInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedInput.isEmpty else { return }
+        
+        // Append user's message
+        let userMessage = ChatMessage(role: "user", content: trimmedInput)
+        messages.append(userMessage)
+        userInput = ""
+        
+        // Prepare request
+        guard let url = URL(string: apiURL) else {
+            self.errorMessage = "Invalid API URL."
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // ChatGPT requires messages in a specific format
+        let requestBody: [String: Any] = [
+            "model": "gpt-4", // or "gpt-3.5-turbo"
+            "messages": messages.map { ["role": $0.role, "content": $0.content] }
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody, options: [])
+        } catch {
+            self.errorMessage = "Failed to encode request."
+            return
+        }
+        
+        isLoading = true
+        
+        // Perform network request
+        URLSession.shared.dataTaskPublisher(for: request)
+            .tryMap { output in
+                // Check for HTTP errors
+                guard let httpResponse = output.response as? HTTPURLResponse,
+                      200..<300 ~= httpResponse.statusCode else {
+                    throw URLError(.badServerResponse)
+                }
+                return output.data
+            }
+            .decode(type: OpenAIResponse.self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { [weak self] completion in
+                guard let self = self else { return }
+                self.isLoading = false
+                switch completion {
+                case .failure(let error):
+                    self.errorMessage = error.localizedDescription
+                case .finished:
+                    break
+                }
+            }, receiveValue: { [weak self] response in
+                guard let self = self else { return }
+                if let assistantMessage = response.choices.first?.message.content.trimmingCharacters(in: .whitespacesAndNewlines) {
+                    let assistant = ChatMessage(role: "assistant", content: assistantMessage)
+                    self.messages.append(assistant)
+                }
+            })
+            .store(in: &cancellables)
+    }
+}
+
+// MARK: - ChatView
+struct ChatView: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    @StateObject private var chatVM = ChatViewModel()
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 15) {
+                            ForEach(chatVM.messages) { message in
+                                HStack {
+                                    if message.role == "user" {
+                                        Spacer()
+                                        Text(message.content)
+                                            .padding()
+                                            .background(Color.primaryColor)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(15)
+                                            .frame(maxWidth: UIScreen.main.bounds.width * 0.7, alignment: .trailing)
+                                            .accessibilityLabel(Text("User message: \(message.content)"))
+                                    } else {
+                                        Text(message.content)
+                                            .padding()
+                                            .background(Color.secondaryColor)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(15)
+                                            .frame(maxWidth: UIScreen.main.bounds.width * 0.7, alignment: .leading)
+                                            .accessibilityLabel(Text("Assistant message: \(message.content)"))
+                                        Spacer()
+                                    }
+                                }
+                            }
+                            if chatVM.isLoading {
+                                HStack {
+                                    Spacer()
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .primaryColor))
+                                        .accessibilityLabel(Text("Loading assistant response"))
+                                    Spacer()
+                                }
+                            }
+                        }
+                        .padding()
+                        .onChange(of: chatVM.messages.count) { _ in
+                            withAnimation {
+                                proxy.scrollTo(chatVM.messages.last?.id, anchor: .bottom)
+                            }
+                        }
+                    }
+                }
+                
+                // Input Field
+                HStack {
+                    TextField("Type your message...", text: $chatVM.userInput)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .frame(minHeight: 30)
+                        .accessibilityLabel(Text("Chat input field"))
+                    
+                    Button(action: {
+                        chatVM.sendMessage()
+                    }) {
+                        Image(systemName: "paperplane.fill")
+                            .rotationEffect(.degrees(45))
+                            .foregroundColor(chatVM.userInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .primaryColor)
+                    }
+                    .disabled(chatVM.userInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .accessibilityLabel(Text("Send message button"))
+                }
+                .padding()
+            }
+            .navigationBarTitle("ChatGPT Assistant", displayMode: .inline)
+            .alert(isPresented: Binding<Bool>(
+                get: { !chatVM.errorMessage.isEmpty },
+                set: { _ in chatVM.errorMessage = "" }
+            )) {
+                Alert(title: Text("Error"), message: Text(chatVM.errorMessage), dismissButton: .default(Text("OK")))
+            }
+            .onAppear {
+                // Optionally, you can send a welcome message
+                if chatVM.messages.isEmpty {
+                    chatVM.messages.append(ChatMessage(role: "assistant", content: "Hello! I'm here to help you find the best opportunities. How can I assist you today?"))
+                }
+            }
+        }
+        .navigationViewStyle(StackNavigationViewStyle()) // To ensure proper layout on iPad
+    }
+}
+
+// MARK: - Updated ContentView with Chat Tab
+struct ContentView: View {
+    @StateObject private var viewModel = OpportunityViewModel()
+    @State private var showOnboarding: Bool = true
+    
+    var body: some View {
+        Group {
+            if showOnboarding {
+                OnboardingView(showOnboarding: $showOnboarding)
+                    .environmentObject(viewModel)
+                    .transition(.opacity)
+            } else {
+                TabView {
+                    HomeView()
+                        .tabItem {
+                            Label("Home", systemImage: "house.fill")
+                        }
+                        .environmentObject(viewModel)
+                    
+                    VolunteerTrackerView()
+                        .tabItem {
+                            Label("Tracker", systemImage: "chart.bar")
+                        }
+                        .environmentObject(viewModel)
+                    
+                    LeaderboardsView() // Now includes Badges functionalities
+                        .tabItem {
+                            Label("Leaderboards", systemImage: "chart.bar.fill")
+                        }
+                        .environmentObject(viewModel)
+                    
+                    CreateEventView()
+                        .tabItem {
+                            Label("Create", systemImage: "plus.circle.fill")
+                        }
+                        .environmentObject(viewModel)
+                    
+                    ProfileView()
+                        .tabItem {
+                            Label("Profile", systemImage: "person.crop.circle.fill")
+                        }
+                        .environmentObject(viewModel)
+                    
+                    MoreView()
+                        .tabItem {
+                            Label("More", systemImage: "ellipsis.circle.fill")
+                        }
+                        .environmentObject(viewModel)
+                    
+                    CommunityView() // New Community section
+                        .tabItem {
+                            Label("Community", systemImage: "person.3.fill")
+                        }
+                        .environmentObject(viewModel)
+                    
+                    // New Chat Tab
+                    ChatView()
+                        .tabItem {
+                            Label("Chat", systemImage: "message.fill")
+                        }
+                        .environmentObject(viewModel)
+                }
+            }
+        }
+        .animation(.easeInOut, value: showOnboarding)
+    }
+}
+
+// MARK: - Preview Providers (Optional)
+struct ChatView_Previews: PreviewProvider {
+    static var previews: some View {
+        ChatView()
+            .environmentObject(OpportunityViewModel())
+    }
+}
+
+struct ChatViewModel_Previews: PreviewProvider {
+    static var previews: some View {
+        ChatView()
+            .environmentObject(OpportunityViewModel())
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}
 

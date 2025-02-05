@@ -3480,3 +3480,53 @@ struct ImagePicker: UIViewControllerRepresentable {
     }
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: UIViewControllerRepresentableContext<ImagePicker>) {}
 }
+
+// MARK: - Random Opportunity Section
+struct RandomOpportunityView: View {
+    @EnvironmentObject var viewModel: OpportunityViewModel
+    @State private var randomOpportunity: Opportunity? = nil
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Feeling Spontaneous?")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.primaryColor)
+                .accessibilityLabel(Text("Random Opportunity Section Title"))
+            
+            if let opportunity = randomOpportunity {
+                // Display the opportunity card using our existing view
+                OpportunityCardView(opportunity: opportunity)
+                    .accessibilityLabel(Text("Random Opportunity: \(opportunity.title)"))
+            } else {
+                Text("No opportunities available at the moment.")
+                    .foregroundColor(.secondaryColor)
+                    .accessibilityLabel(Text("No opportunities message"))
+            }
+            
+            Button(action: {
+                selectRandomOpportunity()
+            }) {
+                Text("Discover Another")
+                    .fontWeight(.semibold)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.secondaryColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(15)
+            }
+            .accessibilityLabel(Text("Discover Another Random Opportunity"))
+            .padding(.horizontal)
+        }
+        .padding()
+        .onAppear {
+            selectRandomOpportunity()
+        }
+    }
+    
+    private func selectRandomOpportunity() {
+        if !viewModel.opportunities.isEmpty {
+            randomOpportunity = viewModel.opportunities.randomElement()
+        }
+    }
+}

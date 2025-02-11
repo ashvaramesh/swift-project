@@ -3530,3 +3530,245 @@ struct RandomOpportunityView: View {
         }
     }
 }
+
+import SwiftUI
+
+// MARK: - Dummy Data Models
+
+struct Opportunity: Identifiable {
+    let id = UUID()
+    let title: String
+    let category: String
+}
+
+struct Event: Identifiable {
+    let id = UUID()
+    let name: String
+    let date: String
+}
+
+// MARK: - Dynamic Opportunity Feed
+
+struct OpportunityFeedView: View {
+    // Dummy opportunities for the feed
+    let opportunities = [
+        Opportunity(title: "Volunteer at Local Shelter", category: "Volunteer"),
+        Opportunity(title: "Research Assistant Position", category: "Research"),
+        Opportunity(title: "Government Internship", category: "Government")
+    ]
+    
+    var body: some View {
+        NavigationView {
+            List(opportunities) { opportunity in
+                HStack {
+                    // Color-coded indicator based on category
+                    Circle()
+                        .fill(color(for: opportunity.category))
+                        .frame(width: 10, height: 10)
+                    Text(opportunity.title)
+                        .font(.body)
+                }
+            }
+            .navigationTitle("Opportunity Feed")
+        }
+    }
+    
+    func color(for category: String) -> Color {
+        switch category {
+        case "Volunteer":
+            return .green
+        case "Research":
+            return .blue
+        case "Government":
+            return .red
+        default:
+            return .gray
+        }
+    }
+}
+
+// MARK: - Interactive Profile Customization
+
+struct ProfileCustomizationView: View {
+    @State private var profileImage: Image = Image(systemName: "person.circle")
+    @State private var bannerText: String = "Welcome to my profile!"
+    @State private var bio: String = "This is my bio. Tell us about yourself."
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            // Banner
+            Text(bannerText)
+                .font(.headline)
+                .padding()
+                .background(Color.orange.opacity(0.3))
+                .cornerRadius(8)
+            
+            // Profile image placeholder
+            profileImage
+                .resizable()
+                .frame(width: 100, height: 100)
+                .clipShape(Circle())
+            
+            // Editable bio field
+            TextField("Enter your bio", text: $bio)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            
+            // Dummy progress tracker
+            ProgressView("Engagement", value: 0.5, total: 1.0)
+                .padding()
+            
+            Spacer()
+        }
+        .padding()
+        .navigationTitle("Profile")
+    }
+}
+
+// MARK: - Improved UI for Event Listings
+
+struct EventListingsView: View {
+    // Dummy event data
+    let events = [
+        Event(name: "Community Meetup", date: "Feb 20"),
+        Event(name: "Charity Run", date: "Mar 15"),
+        Event(name: "Career Fair", date: "Apr 10")
+    ]
+    
+    var body: some View {
+        NavigationView {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    ForEach(events) { event in
+                        VStack(alignment: .leading) {
+                            Text(event.name)
+                                .font(.headline)
+                                .padding(.bottom, 2)
+                            Text(event.date)
+                                .font(.subheadline)
+                        }
+                        .padding()
+                        .background(Color.purple.opacity(0.2))
+                        .cornerRadius(8)
+                        .padding(4)
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Events")
+        }
+    }
+}
+
+// MARK: - Community Hub (Beta)
+
+struct CommunityHubView: View {
+    // Dummy posts for the community hub
+    let posts = [
+        "Great opportunity at XYZ organization!",
+        "Check out our new community event.",
+        "Volunteer needed for upcoming festival."
+    ]
+    
+    var body: some View {
+        NavigationView {
+            List(posts, id: \.self) { post in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(post)
+                        .font(.body)
+                    // Dummy buttons for reactions and comments
+                    HStack {
+                        Button(action: {
+                            // Dummy action for "Like"
+                        }) {
+                            Image(systemName: "hand.thumbsup")
+                        }
+                        Button(action: {
+                            // Dummy action for "Comment"
+                        }) {
+                            Image(systemName: "message")
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            .navigationTitle("Community Hub")
+        }
+    }
+}
+
+// MARK: - Location-Based Opportunity Highlights
+
+struct LocationHighlightsView: View {
+    @State private var selectedLocation: String = "Your Area"
+    // Dummy local opportunities
+    let localOpportunities = [
+        "Local Food Bank Volunteer",
+        "Community Clean-Up Initiative",
+        "Local Library Event"
+    ]
+    
+    var body: some View {
+        NavigationView {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Highlights for:")
+                    Text(selectedLocation)
+                        .fontWeight(.bold)
+                }
+                .padding(.horizontal)
+                
+                ForEach(localOpportunities, id: \.self) { opportunity in
+                    Text("• \(opportunity)")
+                        .padding(.leading)
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Local Highlights")
+        }
+    }
+}
+
+// MARK: - Main ContentView Combining All Features
+
+struct ContentView: View {
+    var body: some View {
+        TabView {
+            OpportunityFeedView()
+                .tabItem {
+                    Image(systemName: "list.bullet")
+                    Text("Feed")
+                }
+            ProfileCustomizationView()
+                .tabItem {
+                    Image(systemName: "person.circle")
+                    Text("Profile")
+                }
+            EventListingsView()
+                .tabItem {
+                    Image(systemName: "calendar")
+                    Text("Events")
+                }
+            CommunityHubView()
+                .tabItem {
+                    Image(systemName: "bubble.left.and.bubble.right")
+                    Text("Community")
+                }
+            LocationHighlightsView()
+                .tabItem {
+                    Image(systemName: "mappin.and.ellipse")
+                    Text("Local")
+                }
+        }
+    }
+}
+
+// MARK: - SwiftUI Preview
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}

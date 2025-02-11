@@ -1,3 +1,66 @@
+
+# Project Development: Early Stages
+
+## Overview
+ImpactLink is designed to connect students with real-world opportunities by providing a centralized platform for volunteer work, internships, and community engagement. This page outlines the early development stages, focusing on implemented features, challenges faced, and planned improvements.
+
+---
+
+## Developed Features
+
+### 🔹 Dynamic Opportunity Feed  
+- Users can now scroll through a continuously updated feed of opportunities.  
+- Each opportunity is color-coded based on its category (e.g., Volunteer, Research, Government).  
+- Improved layout ensures better readability and a cleaner UI.
+
+### 🔹 Interactive Profile Customization  
+- Users can now personalize their profiles with custom banners, profile pictures, and bio sections.  
+- Added a progress tracker that updates based on user engagement with opportunities.  
+- Simplified settings menu for easier navigation.
+
+### 🔹 Improved UI for Event Listings  
+- Events are now displayed in an interactive card format with smooth scrolling.  
+- Added an "Upcoming Events" section to highlight relevant opportunities.  
+- Enhanced contrast and font readability for better accessibility.
+
+### 🔹 Community Hub (Beta)  
+- Introduced a section where users can engage with posts from organizations.  
+- Added inline comments for discussions directly under posts.  
+- Implemented animated reactions for increased engagement.
+
+### 🔹 Location-Based Opportunity Highlights  
+- Added a new section that highlights opportunities based on the user’s selected region.  
+- The home screen now features a rotating banner showcasing featured opportunities nearby.  
+- Users can manually set their preferred location for personalized results.
+
+---
+
+## Challenges Encountered  
+
+- **UI Scaling Issues**: Some elements did not display properly on smaller screens, requiring layout adjustments.  
+- **Navigation Flow**: Users found it difficult to access certain pages efficiently, leading to a refined navigation bar.  
+- **Profile Page Responsiveness**: Profile elements were initially misaligned on different screen sizes, but adjustments have improved consistency.  
+
+---
+
+## What’s Working Well  
+
+✅ **Smooth Profile Customization** – The improved profile settings enhance user experience.  
+✅ **Event Listings Layout** – Users find the new event card design more engaging and readable.  
+✅ **Community Hub** – Early testers enjoy the ability to comment and interact on posts.  
+
+---
+
+## Next Steps  
+
+- Further improve animations and UI consistency across all pages.  
+- Enhance accessibility features, such as font size adjustments and color contrast options.  
+- Refine the Community Hub by adding pinned posts and trending topics.  
+
+---
+
+This page will be continuously updated as ImpactLink evolves. Stay tuned for more progress! 🚀
+
 # ImpactLink Resources
 
 ## **📖 Swift & iOS Development**
